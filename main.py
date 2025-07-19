@@ -2,8 +2,8 @@ import os
 import json
 import asyncio
 import websockets
-import talib
-import numpy as np
+import pandas as pd
+import pandas_ta as ta
 from telegram import Update
 from telegram.ext import Updater, CommandHandler, CallbackContext
 
@@ -13,19 +13,22 @@ DERIV_TOKEN = os.getenv("DERIV_TOKEN")
 ema_period = 50
 
 def sniper_strategy(candles):
-    closes = np.array([c['close'] for c in candles], dtype=float)
-    ema = talib.EMA(closes, timeperiod=ema_period)
-    rsi = talib.RSI(closes, timeperiod=14)
-    macd, macdsignal, _ = talib.MACD(closes, fastperiod=12, slowperiod=26, signalperiod=9)
+    df = pd.DataFrame(candles)
+    df['ema'] = ta.ema(df['close'], length=ema_period)
+    df['rsi'] = ta.rsi(df['close'], length=14)
+    macd = ta.macd(df['close'], fast=12, slow=26, signal=9)
+    df['macd'] = macd['MACD_12_26_9']
+    df['macd_signal'] = macd['MACDs_12_26_9']
 
-    if (closes[-1] < ema[-1]) and (macd[-1] < macdsignal[-1]) and (rsi[-1] < 50):
+    last = df.iloc[-1]
+    if (last['close'] < last['ema']) and (last['macd'] < last['macd_signal']) and (last['rsi'] < 50):
         return "SELL"
-    elif (closes[-1] > ema[-1]) and (macd[-1] > macdsignal[-1]) and (rsi[-1] > 50):
+    elif (last['close'] > last['ema']) and (last['macd'] > last['macd_signal']) and (last['rsi'] > 50):
         return "BUY"
     return None
 
 def start(update: Update, context: CallbackContext):
-    update.message.reply_text("✅ Boom600 Sniper Bot is Live! Signals will appear automatically.")
+    update.message.reply_text("✅ Boom600 Sniper Bot Live! Signals will appear automatically.")
 
 def normal(update: Update, context: CallbackContext):
     update.message.reply_text("Normal Mode ✅ — Waiting for sniper entry...")
