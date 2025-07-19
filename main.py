@@ -55,7 +55,7 @@ async def deriv_candle_stream(bot):
                 signal = sniper_strategy(candles)
                 if signal:
                     price = candles[-1]['close']
-                    bot.send_message(chat_id=YOUR_CHAT_ID, text=f"🔥 SNIPER SIGNAL 🔥\nDirection: {signal}\nPrice: {price}")
+                    bot.send_message(chat_id=6064133011, text=f"🔥 SNIPER SIGNAL 🔥\nDirection: {signal}\nPrice: {price}")
 
 def main():
     updater = Updater(BOT_TOKEN)
